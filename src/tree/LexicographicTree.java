@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 public class LexicographicTree {
 	
@@ -28,7 +27,7 @@ public class LexicographicTree {
 	 * @param filename A text file containing the words to be inserted in the tree 
 	 */
 	public LexicographicTree(String filename) {
-		this.root = new TreeVertice();
+		this.root = new TreeVertice(' ');
 		treeSize = 0;
 		if(filename != null) {
 			initializeTree(filename);
@@ -58,10 +57,10 @@ public class LexicographicTree {
 		char currentCharacter;
 		for(int i = 0; i < word.length();i++) {
 			currentCharacter = word.charAt(i);
-			if(currentCharacter == 39 || currentCharacter == 45 || (currentCharacter >= 97 && currentCharacter <=122)) {
+			if(isAcceptedCharacter(currentCharacter)) {
 				verticeFound = currentVertice.getChild(currentCharacter);
 				if(verticeFound == null) {
-					verticeFound = new TreeVertice();
+					verticeFound = new TreeVertice(currentCharacter);
 					currentVertice.addChild(currentCharacter, verticeFound);
 					isNewWord = true;
 				}
@@ -144,12 +143,16 @@ public class LexicographicTree {
 		
 	}
 	
+	private boolean isAcceptedCharacter(char characterToVerify) {
+		return characterToVerify == 39 || characterToVerify == 45 || (characterToVerify >= 97 && characterToVerify <=122);
+	}
+	
 	private void getAllWords(List<String> words,TreeVertice vertice,String prefix) {
 		if(vertice.isEndWord()) {
 			words.add(prefix);
 		}
-		for(var entry : vertice.getEntries()) {
-			getAllWords(words, entry.getValue(), prefix+entry.getKey());
+		for(var child : vertice.getChildren()) {
+			getAllWords(words, child, prefix+child.getVerticeValue());
 		}
 	}
 	
@@ -157,9 +160,8 @@ public class LexicographicTree {
 		if(vertice.isEndWord() && prefix.length() == length) {
 			words.add(prefix);
 		} else {
-			for(var entry : vertice.getEntries()) {
-				getAllWordsOfLength(words, entry.getValue(), prefix + entry.getKey(), length);
-			}
+			for(var child : vertice.getChildren()) {
+				getAllWordsOfLength(words, child, prefix+child.getVerticeValue(),length);			}
 		}
 	}
 	

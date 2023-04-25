@@ -1,25 +1,43 @@
 package tree;
 
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Arrays;
 
-class TreeVertice {
-    private final SortedMap<Character, TreeVertice> children = new TreeMap<>();
+class TreeVertice implements Comparable<TreeVertice> {
+	private final byte verticeValue;
+	private static final int MAX_CHILDREN = 28;
+    private TreeVertice[] children = new TreeVertice[0];
     private boolean isEndWord = false;
+    
+    public TreeVertice(char verticeValue) {
+    	this.verticeValue = (byte)verticeValue;
+    }
+    
+    public char getVerticeValue() {
+    	return (char)verticeValue;
+    }
 
     public TreeVertice getChild(char letter) {
-		return children.get(letter);
+    	for(var child : children) {
+    		if(child.getVerticeValue() == letter) {
+    			return child;
+    		}
+    	}
+		return null;
 	}
 	
-	public Set<Entry<Character, TreeVertice>> getEntries() {
-		return children.entrySet();
+	public TreeVertice[] getChildren() {
+		return children;
 	}
 	
 	public void addChild(char letter,TreeVertice vertice) {
-		if(letter != ' ' && vertice != null) {
-			children.put(letter, vertice);
+		if(children.length < MAX_CHILDREN) {
+			if(getChild(letter) == null) {
+				int nbrChildren = children.length;
+				
+				children = Arrays.copyOf(children,nbrChildren+1);
+				children[nbrChildren] = vertice;
+				Arrays.sort(children);
+			}
 		}
 	}
 
@@ -29,5 +47,10 @@ class TreeVertice {
 	
 	public boolean isEndWord() {
 		return isEndWord;
+	}
+
+	@Override
+	public int compareTo(TreeVertice v) {
+		return verticeValue - v.getVerticeValue();
 	}
 }
