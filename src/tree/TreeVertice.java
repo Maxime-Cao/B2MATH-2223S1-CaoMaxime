@@ -3,17 +3,17 @@ package tree;
 import java.util.Arrays;
 
 class TreeVertice implements Comparable<TreeVertice> {
-	private final byte verticeValue;
+	private final char verticeValue;
 	private static final int MAX_CHILDREN = 28;
     private TreeVertice[] children = new TreeVertice[0];
     private boolean isEndWord = false;
     
     public TreeVertice(char verticeValue) {
-    	this.verticeValue = (byte)verticeValue;
+    	this.verticeValue = verticeValue;
     }
     
     public char getVerticeValue() {
-    	return (char)verticeValue;
+    	return verticeValue;
     }
 
     public TreeVertice getChild(char letter) {
