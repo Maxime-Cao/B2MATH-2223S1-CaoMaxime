@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 public class LexicographicTree {
 	
-	private final TreeVertice root;
+	private final TreeVertex root;
 	private int treeSize;
 	
 	/*
@@ -27,7 +27,7 @@ public class LexicographicTree {
 	 * @param filename A text file containing the words to be inserted in the tree 
 	 */
 	public LexicographicTree(String filename) {
-		this.root = new TreeVertice(' ');
+		this.root = new TreeVertex(' ');
 		treeSize = 0;
 		if(filename != null) {
 			initializeTree(filename);
@@ -52,22 +52,22 @@ public class LexicographicTree {
 	 */
 	public void insertWord(String word) {
 		boolean isNewWord = false;
-		TreeVertice currentVertice = root;
-		TreeVertice verticeFound;
+		TreeVertex currentVertex = root;
+		TreeVertex vertexFound;
 		char currentCharacter;
 		for(int i = 0; i < word.length();i++) {
 			currentCharacter = word.charAt(i);
 			if(isAcceptedCharacter(currentCharacter)) {
-				verticeFound = currentVertice.getChild(currentCharacter);
-				if(verticeFound == null) {
-					verticeFound = new TreeVertice(currentCharacter);
-					currentVertice.addChild(currentCharacter, verticeFound);
+				vertexFound = currentVertex.getChild(currentCharacter);
+				if(vertexFound == null) {
+					vertexFound = new TreeVertex(currentCharacter);
+					currentVertex.addChild(currentCharacter, vertexFound);
 					isNewWord = true;
 				}
-				currentVertice = verticeFound;
+				currentVertex = vertexFound;
 			}
 		}
-		currentVertice.setEndWord(true);
+		currentVertex.setEndWord(true);
 		
 		if(isNewWord) {
 			treeSize++;
@@ -79,15 +79,15 @@ public class LexicographicTree {
 	 * @return True if the word is present, false otherwise
 	 */
 	public boolean containsWord(String word) {
-		TreeVertice currentVertice = root;
+		TreeVertex currentVertex = root;
 		for(char currentCharacter : word.toCharArray()) {
-			TreeVertice verticeFound = currentVertice.getChild(currentCharacter);
-			if(verticeFound == null) {
+			TreeVertex vertexFound = currentVertex.getChild(currentCharacter);
+			if(vertexFound == null) {
 				return false;
 			}
-			currentVertice = verticeFound;
+			currentVertex = vertexFound;
 		}
-		return currentVertice.isEndWord();
+		return currentVertex.isEndWord();
 	}
 	
 	/**
@@ -98,16 +98,16 @@ public class LexicographicTree {
 	 */
 	public List<String> getWords(String prefix) {
 		List<String> words = new ArrayList<>();
-		TreeVertice currentVertice = root;
+		TreeVertex currentVertex = root;
 		if(!prefix.isEmpty()) {
 			for(char currentChar : prefix.toCharArray()) {
-				currentVertice = currentVertice.getChild(currentChar);
-				if(currentVertice == null) {
+				currentVertex = currentVertex.getChild(currentChar);
+				if(currentVertex == null) {
 					return words;
 				}
 			}
 		}
-		getAllWords(words,currentVertice,prefix);
+		getAllWords(words,currentVertex,prefix);
 		return words;
 	}
 
@@ -147,21 +147,21 @@ public class LexicographicTree {
 		return characterToVerify == 39 || characterToVerify == 45 || (characterToVerify >= 97 && characterToVerify <=122);
 	}
 	
-	private void getAllWords(List<String> words,TreeVertice vertice,String prefix) {
-		if(vertice.isEndWord()) {
+	private void getAllWords(List<String> words,TreeVertex vertex,String prefix) {
+		if(vertex.isEndWord()) {
 			words.add(prefix);
 		}
-		for(var child : vertice.getChildren()) {
-			getAllWords(words, child, prefix+child.getVerticeValue());
+		for(var child : vertex.getChildren()) {
+			getAllWords(words, child, prefix+child.getVertexValue());
 		}
 	}
 	
-	private void getAllWordsOfLength(List<String> words,TreeVertice vertice,String prefix,int length) {
-		if(vertice.isEndWord() && prefix.length() == length) {
+	private void getAllWordsOfLength(List<String> words,TreeVertex vertex,String prefix,int length) {
+		if(vertex.isEndWord() && prefix.length() == length) {
 			words.add(prefix);
 		} else {
-			for(var child : vertice.getChildren()) {
-				getAllWordsOfLength(words, child, prefix+child.getVerticeValue(),length);			}
+			for(var child : vertex.getChildren()) {
+				getAllWordsOfLength(words, child, prefix+child.getVertexValue(),length);			}
 		}
 	}
 	

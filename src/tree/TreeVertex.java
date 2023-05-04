@@ -2,40 +2,40 @@ package tree;
 
 import java.util.Arrays;
 
-class TreeVertice implements Comparable<TreeVertice> {
-	private final char verticeValue;
+class TreeVertex implements Comparable<TreeVertex> {
+	private final char vertexValue;
 	private static final int MAX_CHILDREN = 28;
-    private TreeVertice[] children = new TreeVertice[0];
+    private TreeVertex[] children = new TreeVertex[0];
     private boolean isEndWord = false;
     
-    public TreeVertice(char verticeValue) {
-    	this.verticeValue = verticeValue;
+    public TreeVertex(char vertexValue) {
+    	this.vertexValue = vertexValue;
     }
     
-    public char getVerticeValue() {
-    	return verticeValue;
+    public char getVertexValue() {
+    	return vertexValue;
     }
 
-    public TreeVertice getChild(char letter) {
+    public TreeVertex getChild(char letter) {
     	for(var child : children) {
-    		if(child.getVerticeValue() == letter) {
+    		if(child.getVertexValue() == letter) {
     			return child;
     		}
     	}
 		return null;
 	}
 	
-	public TreeVertice[] getChildren() {
+	public TreeVertex[] getChildren() {
 		return children;
 	}
 	
-	public void addChild(char letter,TreeVertice vertice) {
+	public void addChild(char letter,TreeVertex vertex) {
 		if(children.length < MAX_CHILDREN) {
 			if(getChild(letter) == null) {
 				int nbrChildren = children.length;
 				
 				children = Arrays.copyOf(children,nbrChildren+1);
-				children[nbrChildren] = vertice;
+				children[nbrChildren] = vertex;
 				Arrays.sort(children);
 			}
 		}
@@ -50,7 +50,7 @@ class TreeVertice implements Comparable<TreeVertice> {
 	}
 
 	@Override
-	public int compareTo(TreeVertice v) {
-		return verticeValue - v.getVerticeValue();
+	public int compareTo(TreeVertex v) {
+		return vertexValue - v.getVertexValue();
 	}
 }
