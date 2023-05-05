@@ -37,7 +37,6 @@ public class LexicographicTree {
 	/*
 	 * PUBLIC METHODS
 	 */
-	
 	/**
 	 * Returns the number of words present in the lexicographic tree.
 	 * @return The number of words present in the lexicographic tree
@@ -79,6 +78,10 @@ public class LexicographicTree {
 	 * @return True if the word is present, false otherwise
 	 */
 	public boolean containsWord(String word) {
+		if(word == null) {
+			return false;
+		}
+		
 		TreeVertex currentVertex = root;
 		for(char currentCharacter : word.toCharArray()) {
 			TreeVertex vertexFound = currentVertex.getChild(currentCharacter);
@@ -88,6 +91,26 @@ public class LexicographicTree {
 			currentVertex = vertexFound;
 		}
 		return currentVertex.isEndWord();
+	}
+	
+	public boolean containsPrefix(String prefix) {
+		if(prefix == null) {
+			return false;
+		}
+		
+		if(prefix.isEmpty()) {
+			return true;
+		}
+		
+		TreeVertex currentVertex = root;
+		for(char currentCharacter : prefix.toCharArray()) {
+			TreeVertex vertexFound = currentVertex.getChild(currentCharacter);
+			if(vertexFound == null) {
+				return false;
+			}
+			currentVertex = vertexFound;
+		}
+		return true;
 	}
 	
 	/**
