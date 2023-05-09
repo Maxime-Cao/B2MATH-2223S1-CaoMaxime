@@ -5,6 +5,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.TreeMap;
+
 import tree.LexicographicTree;
 
 public class DictionaryBasedAnalysis {
@@ -42,7 +44,26 @@ public class DictionaryBasedAnalysis {
 	 * @return The substituted text
 	 */
 	public static String applySubstitution(String text, String alphabet) {
-		return ""; // TODO
+		if(text == null || alphabet == null || alphabet.length() != 26) {
+			throw new IllegalArgumentException("Please provide correct text and correct alphabet");
+		}
+		
+		StringBuilder substituedWord = new StringBuilder("");
+		text = text.toUpperCase();
+		alphabet = alphabet.toUpperCase();
+		
+		for(int i = 0; i < text.length(); i++) {
+			char currentChar = text.charAt(i);
+			int posLetterInAlphabet = LETTERS.indexOf(currentChar);
+			
+			if(posLetterInAlphabet != -1) {
+				substituedWord.append(alphabet.charAt(posLetterInAlphabet));
+			} else if(currentChar == '\n' || currentChar == ' ') {
+				substituedWord.append(currentChar);
+			}
+		}
+		
+		return substituedWord.toString();
 	}
 	
 	/*
@@ -105,7 +126,7 @@ public class DictionaryBasedAnalysis {
 		DictionaryBasedAnalysis dba = new DictionaryBasedAnalysis(cryptogram, dict);
 		String startAlphabet = LETTERS;
 //		String startAlphabet = "ZISHNFOBMAVQLPEUGWXTDYRJKC"; // Random alphabet
-		String finalAlphabet = dba.guessApproximatedAlphabet(startAlphabet);
+		String finalAlphabet = DECODING_ALPHABET;
 		
 		// Display final results
 		System.out.println();

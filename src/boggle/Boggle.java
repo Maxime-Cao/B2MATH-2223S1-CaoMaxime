@@ -69,7 +69,7 @@ public class Boggle {
 	 * @return true if the word is present, false otherwise
 	 */
 	public boolean contains(String word) {
-		if(word == null || word.isEmpty()) {
+		if(word == null ||word.length() < 3) {
 			return false;
 		}
 		
