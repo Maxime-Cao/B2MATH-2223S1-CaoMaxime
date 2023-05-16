@@ -54,6 +54,8 @@ public class LexicographicTree {
 		TreeVertex currentVertex = root;
 		TreeVertex vertexFound;
 		char currentCharacter;
+		
+		word = word.toLowerCase();
 		for(int i = 0; i < word.length();i++) {
 			currentCharacter = word.charAt(i);
 			if(isAcceptedCharacter(currentCharacter)) {
@@ -82,6 +84,8 @@ public class LexicographicTree {
 			return false;
 		}
 		
+		word = word.toLowerCase();
+		
 		TreeVertex currentVertex = root;
 		for(char currentCharacter : word.toCharArray()) {
 			TreeVertex vertexFound = currentVertex.getChild(currentCharacter);
@@ -101,6 +105,8 @@ public class LexicographicTree {
 		if(prefix.isEmpty()) {
 			return true;
 		}
+		
+		prefix = prefix.toLowerCase();
 		
 		TreeVertex currentVertex = root;
 		for(char currentCharacter : prefix.toCharArray()) {
@@ -123,6 +129,7 @@ public class LexicographicTree {
 		List<String> words = new ArrayList<>();
 		TreeVertex currentVertex = root;
 		if(!prefix.isEmpty()) {
+			prefix = prefix.toLowerCase();
 			for(char currentChar : prefix.toCharArray()) {
 				currentVertex = currentVertex.getChild(currentChar);
 				if(currentVertex == null) {
