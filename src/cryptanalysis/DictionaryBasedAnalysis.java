@@ -58,17 +58,16 @@ public class DictionaryBasedAnalysis {
 		
 		int startingNbrWords = wordsExtracted.size();
 		int currentNbrWords = startingNbrWords;
-		String newAlphabet = "";
-		Map<Character,Character> map1 = new HashMap<>();
-		Map<Character,Character> map2 = new HashMap<>();
 				
 		while(!wordsExtracted.isEmpty()) {
+			
+			String newAlphabet = "";
 			
 			String currentExtractedWord = wordsExtracted.first().toUpperCase();
 			String compatibleWord = getCompatibleWord(currentExtractedWord);
 						
 			if(!compatibleWord.isEmpty()) {
-				newAlphabet = updateAlphabet(alphabet, newAlphabet,map1,map2,currentExtractedWord, compatibleWord);			
+				newAlphabet = updateAlphabet(alphabet,currentExtractedWord, compatibleWord);			
 				applyAlphabetOnWords(wordsExtracted,newAlphabet);
 			} else {
 				wordsExtracted.remove(currentExtractedWord);
@@ -81,9 +80,7 @@ public class DictionaryBasedAnalysis {
 			}
 			
 			currentNbrWords = wordsExtracted.size();
-						
-			System.out.println(currentExtractedWord);
-			
+									
 			System.out.printf("=> Score decoded : words = %d / valid = %d / invalid = %d\n",startingNbrWords,startingNbrWords - currentNbrWords,currentNbrWords);
 		}
 		return alphabet;
@@ -200,54 +197,55 @@ public class DictionaryBasedAnalysis {
 		    return seqMap.values().toArray();
 	}
 	
-	private String updateAlphabet(String startingAlphabet,String newAlphabet,Map<Character,Character> map1,Map<Character,Character> map2,String cryptogram,String candidateWord) {
-		StringBuilder updatedAlphabet = new StringBuilder(newAlphabet.isEmpty() ? startingAlphabet : newAlphabet);
-		System.out.println("(Init) " + updatedAlphabet.toString());
-		
-		for(int i = 0; i < cryptogram.length(); i++) {
-			char currentCryptoCharacter = cryptogram.charAt(i);
-			char currentWordCharacter = candidateWord.charAt(i);
-			
-			if(!map1.containsKey(currentCryptoCharacter)) {
-				
-				int posFirstCharacter = startingAlphabet.indexOf(currentCryptoCharacter);
-				
-				int posSecondCharacter = startingAlphabet.indexOf(currentWordCharacter);
-				
-				if(posFirstCharacter != -1 && posSecondCharacter != -1) {
-					updatedAlphabet.setCharAt(posFirstCharacter, currentWordCharacter);
-					map1.put(currentCryptoCharacter, currentWordCharacter);
-					
-					if(map2.containsKey(currentCryptoCharacter)) {
-						var valueMap2 = map2.get(currentCryptoCharacter);
-						
-						for(var v : map2.entrySet()) {
-							if(v.getValue() == currentWordCharacter) {
-								var posLetter = startingAlphabet.indexOf(v.getKey());
-								if(posLetter != -1) {
-									updatedAlphabet.setCharAt(posLetter, valueMap2);
-									break;
-								}
-							}
-						}
-						map2.remove(currentCryptoCharacter);
-					} else {
-						map2.put(currentWordCharacter, currentCryptoCharacter);
-						updatedAlphabet.setCharAt(posSecondCharacter, currentCryptoCharacter);
-					}
-				}
-				
-				System.out.println("(Letter crypto): " + currentCryptoCharacter);
-				System.out.println("(Letter word): " + currentWordCharacter);
+	private String updateAlphabet(String alphabet,String cryptogram,String candidateWord) {
+		Map<Character,Character> substitutions = new HashMap<>();
+		StringBuilder newAlphabet = new StringBuilder(alphabet);
+		for(int i = 0; i < alphabet.length(); i++) {
+			char currentLetter = alphabet.charAt(i);
+			int indexLetterInCrypto = cryptogram.indexOf(currentLetter);
+			if(indexLetterInCrypto == -1) {
+				substitutions.put(currentLetter, currentLetter);
+			} else {
+				substitutions.put(currentLetter,candidateWord.charAt(indexLetterInCrypto));
 			}
-			
-			
-			System.out.println(i + ") " + updatedAlphabet.toString());
 		}
 		
-		System.out.println("(Final) " + updatedAlphabet.toString());
+		for(var currentSubstitution : substitutions.entrySet()) {
+			char currentKey = currentSubstitution.getKey();
+			char currentValue = currentSubstitution.getValue();
+			if(currentKey == currentValue) {
+				char newValue = currentValue;
+				while(newValue != ' ') {
+					newValue = getKeyWithLetterValue(newValue, substitutions);
+					
+					if(newValue != ' ') {
+						currentValue = newValue;
+					}
+				}
+				substitutions.put(currentKey,currentValue);
+			}
+		}
 		
-		return updatedAlphabet.toString();
+		for(var currentSub : substitutions.entrySet()) {
+			var currentKey = currentSub.getKey();
+			var currentValue = currentSub.getValue();
+			
+			if(currentKey != currentValue) {
+				newAlphabet.setCharAt(alphabet.indexOf(currentKey),currentValue);
+			}
+		}
+		
+		
+		return newAlphabet.toString();
+	}
+	
+	private char getKeyWithLetterValue(char letter,Map<Character,Character> substitutions) {
+		for(var currentSubstitution : substitutions.entrySet()) {
+			if(currentSubstitution.getKey() != letter && currentSubstitution.getValue() == letter) {
+				return currentSubstitution.getKey();
+			}
+		}
+		return ' ';
 	}
 	
 	private void applyAlphabetOnWords(TreeSet<String> wordsExtracted,String alphabet) {
