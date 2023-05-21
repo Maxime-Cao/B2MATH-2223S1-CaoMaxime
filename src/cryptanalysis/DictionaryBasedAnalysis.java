@@ -10,9 +10,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import tree.LexicographicTree;
 
@@ -26,6 +29,8 @@ public class DictionaryBasedAnalysis {
 	
 	private final String cryptogram;
 	private final LexicographicTree dictionnary;
+	private Set<String> currentCompatibleWords;
+	private int currentCompatibleWordsSize;
 
 	/*
 	 * CONSTRUCTOR
@@ -37,6 +42,8 @@ public class DictionaryBasedAnalysis {
 		
 		this.cryptogram = cryptogram;
 		this.dictionnary = dict;
+		this.currentCompatibleWords = new HashSet<>();
+		this.currentCompatibleWordsSize = 0;
 	}
 	
 	/*
@@ -55,37 +62,31 @@ public class DictionaryBasedAnalysis {
 		List<String> wordsExtracted = extractWords(cryptogram);
 		
 		if(!wordsExtracted.isEmpty()) {
-			List<String> wordsCopy = new ArrayList<>(wordsExtracted);
+			List<String> currentWords = new ArrayList<>(wordsExtracted);
 			String currentExtractedWord;
-			int startingNbrWords = wordsCopy.size();
-			int currentNbrWords = startingNbrWords;
 			
-			while(!wordsCopy.isEmpty()) {
+			while(!currentWords.isEmpty()) {
 				
-				currentExtractedWord  = wordsCopy.get(0);
-				System.out.println("ExtractedWord) " + currentExtractedWord);
-
+				currentExtractedWord  = currentWords.get(0);
+				
 				String newAlphabet = "";
 				
 				String compatibleWord = getCompatibleWord(currentExtractedWord);
-							
+
+						
 				if(!compatibleWord.isEmpty()) {
 					newAlphabet = updateAlphabet(alphabet,applySubstitution(currentExtractedWord, alphabet), compatibleWord);
-					wordsCopy = new ArrayList<>(wordsExtracted);
-					removeValidWords(wordsCopy,newAlphabet);
-				}
-								
-				if(currentNbrWords > wordsCopy.size()) {
-					alphabet = newAlphabet;
-				} else {
-					wordsCopy.remove(currentExtractedWord);
+					var newWords = new ArrayList<>(wordsExtracted);
+					removeValidWords(newWords,newAlphabet);
+					
+					if(newWords.size() < currentWords.size()) {
+						alphabet = newAlphabet;
+						currentWords = newWords;
+					}
 				}
 				
-				currentNbrWords = wordsCopy.size();
+				currentWords.remove(currentExtractedWord);
 				
-				wordsExtracted.remove(currentExtractedWord);
-																		
-				System.out.printf("=> Score decoded : words = %d / valid = %d / invalid = %d\n",startingNbrWords,startingNbrWords - currentNbrWords,currentNbrWords);
 			}
 		}
 		return alphabet;
@@ -116,7 +117,6 @@ public class DictionaryBasedAnalysis {
 				substituedWord.append(currentChar);
 			}
 		}
-		
 		return substituedWord.toString();
 	}
 	
@@ -179,33 +179,43 @@ public class DictionaryBasedAnalysis {
 	}
 	
 	private String getCompatibleWord(String cryptogram) {
-		var cryptoSeq = getWordSequence(cryptogram);
 		
-		List<String> wordsFound = dictionnary.getWordsOfLength(cryptogram.length());
-				
-		for(var currentWord : wordsFound) {
-			currentWord = currentWord.replaceAll("[^a-z]", "");
-			if(Arrays.equals(cryptoSeq,getWordSequence(currentWord))) {
-				return currentWord.toUpperCase();
-			}
-		}
-		
-		return "";
+		int cryptogramLength = cryptogram.length();
+
+	    if (currentCompatibleWordsSize != cryptogramLength) {
+	        currentCompatibleWords = new HashSet<>(dictionnary.getWordsOfLength(cryptogramLength));
+	        currentCompatibleWordsSize = cryptogramLength;
+	    }
+
+	    var cryptoSeq = getWordSequence(cryptogram);
+
+	    for (var word : currentCompatibleWords) {
+	        String currentWord = word.replaceAll("[^a-z]", "");
+	        var wordSeq = getWordSequence(currentWord);
+
+	        if (wordSeq.equals(cryptoSeq)) {
+	            return currentWord.toUpperCase();
+	        }
+	    }
+
+	    return "";
 	}
-	
-	private Object[] getWordSequence(String word) {
-		  Map<Character,String> seqMap = new LinkedHashMap<Character,String>();
-		    
-		    for(int i = 0; i < word.length(); i++) {
-		        char currentCharacter = word.charAt(i);
-		        if(seqMap.containsKey(currentCharacter)) {
-		            String currentValue = seqMap.get(currentCharacter);
-		            seqMap.put(currentCharacter,String.format("%s%d",currentValue,i));
-		        } else {
-		        	seqMap.put(currentCharacter,String.format("%d",i));
-		        }
-		    }
-		    return seqMap.values().toArray();
+
+	private Set<String> getWordSequence(String word) {
+	    Map<Character, String> seqMap = new LinkedHashMap<>();
+
+	    for (int i = 0; i < word.length(); i++) {
+	        char currentCharacter = word.charAt(i);
+	        
+	        if (seqMap.containsKey(currentCharacter)) {
+	            String currentValue = seqMap.get(currentCharacter);
+	            seqMap.put(currentCharacter, String.format("%s%d", currentValue, i));
+	        } else {
+	            seqMap.put(currentCharacter, String.format("%d", i));
+	        }
+	    }
+
+	    return new HashSet<>(seqMap.values());
 	}
 	
 	private String updateAlphabet(String alphabet,String cryptogram,String candidateWord) {
@@ -240,9 +250,7 @@ public class DictionaryBasedAnalysis {
 				newAlphabet.setCharAt(alphabet.indexOf(currentKey),currentValue);
 			}
 		}
-		
-		System.out.println(newAlphabet.toString());
-		
+				
 		return newAlphabet.toString();
 	}
 	
