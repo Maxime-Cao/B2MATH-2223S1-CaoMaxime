@@ -10,11 +10,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import tree.LexicographicTree;
 
@@ -67,12 +65,11 @@ public class DictionaryBasedAnalysis {
 			while(!currentWords.isEmpty()) {
 				
 				currentExtractedWord  = currentWords.get(0);
-				
+								
 				String newAlphabet = "";
 				
 				String compatibleWord = getCompatibleWord(currentExtractedWord);
-
-						
+										
 				if(!compatibleWord.isEmpty()) {
 					newAlphabet = updateAlphabet(alphabet,applySubstitution(currentExtractedWord, alphabet), compatibleWord);
 					var newWords = new ArrayList<>(wordsExtracted);
@@ -85,7 +82,6 @@ public class DictionaryBasedAnalysis {
 				}
 				
 				currentWords.remove(currentExtractedWord);
-				
 			}
 		}
 		return alphabet;
