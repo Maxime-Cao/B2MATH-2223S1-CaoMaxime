@@ -39,8 +39,15 @@ public class Boggle {
 	public Boggle(int size, String letters, LexicographicTree dict) {
 		verifyGridSize(size);
 		
-		if(letters == null || size * size != letters.length()) {
+		int lettersLength = letters.length();
+		int sizeGrid = size*size;
+		
+		if(sizeGrid > lettersLength) {
 			throw new IllegalArgumentException("Le nombre de lettres fournies n'est pas correct");
+		}
+		
+		if(sizeGrid < lettersLength) {
+			letters = letters.substring(0,sizeGrid);
 		}
 		dictionnary = dict;
 		buildGraph(size, letters);

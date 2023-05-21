@@ -17,6 +17,8 @@ public class BoggleTest {
 			"onces", "ose", "osent", "pre", "pres", "presse", "pressent", "ressent", "sec", "secs", "sen", "sent", "set", "son",
 			"songe", "songent", "sons", "tenson", "tensons", "tes"}));
 	private static final String GRID_LETTERS = "rhreypcswnsntego";
+	String grid50x50 = "eymmccsrltjttsdiraoarliuniepeousrcgoiseerreeistiedtomcteevcmkaualilaretneerectresieenspgizeoeceecudsrrsrvfianrsicwtdieioeiufnidlaaeeoeieitmntleavieacalischvzeatuisiupatolauaernetasatttadvtthzraaneuzfpneenabiielhcnitesaouelsenxrtojlcastieklkrupeletaiztleapqgaeocbpteutnetrtozatluuarapepsvipesxolteatmylttumelctahsowlsadoelouamisparejpmuaasoaeszsuilubrdrannyosfewnolneudpatcrwatblttpensaaunvkslrekiittciivsomuestiurfuaxreeunuennetemubenanvsucimozentlvptnsoyaoatospesvaesasyysdlbdoraguhpleonvfrelentickiwzrnmimsaeimralovhetscejsdsnrtcsgporubtewesdklorlvteselauxieusieetfmiplllneuyprlpiiujiewverneussnnaxoaswclermderupyurmaareuescriqesbeeadldnlhtsnaucxeadstciqneeetcwtctcltavxgiiuorlomewbleeaoanrjeqeaqhzetmamisirasceranivleteeuaedeaatnsostwtbtonuasilsodhxsmnetecuoesepmotlndamvdcaeebiualneltdrtnwgerifterpepdetdbgollulneoynesonnrpesaustieundaevansmspaisinusitiaagrhoaeeewotnlagtlinjdssnocmeigvultkamnarvcloohslgiueawnyterddduepeislsmaemaiensuytiraesliehotcmaeoeovtsoiostialfertapbuptefeeleeonkeeectcdtneuidrlrpeenmeauvztltsetaeidlsrgscvlsenmetyeoueqesassooiajprrsytioqesugwvatixluutotimwlpesreeicylreeeseauueeeeapornntulivlonansipvoeeactiuecmeudnenrqaieordhluomrtsrmetetswlieqcmltslvsadeuspglmyruteoixiuoepdnectntentdaualdpcsoaeljvonkeftneiuedeeztsatencaectoeptluatriocdocrdtmudleueornptmeintlzejaaaneeradibraeaoaanpoisieeurtettrxvtneoegleltagkasosrastluadxsepnlsaadoaiepjswyedatmrsnivmriseaweinvatepciuuesssnllsssmixlesiedettssyoeuipwltetitececoieeozweaenmlaoroospptusidpkdvsrnqaajituspuuleiisheiogeinpbbsitbsvetofsncnaetaowooekmuntavroonjraduuacknoqqknnnrjoopeeofzdyseaoltsclvaaapiueceauofcdbntmxtneetpoitwiinfaeltgueeispzeacneqmviaiusaettplhiuaetqaewtfuuipoueuesnsoxaixaeeyavqllssqareessnmeolsetlvttbpbeoosesiuincpnersriiterrincnhsemaunvaseeueprldkiecnwtisultmmenensaojgidntetselyzagtctaisiraipzegeienjreosuuszuynlnpooesurddauuuitnouspiiuaeeqerelumdalnohdhueuuiiaiaaltlunnsnamleoprecysucviuirsatenctssjeniinreuenvirsntrwzntaeeieouapntlmayotrpsuunnuiptsxaevplkmuruasocuimontijceksmaeaaearurosaeitpimvtityevsualpsosallkkimiaaievplozjirncedcismssamnerotsprnltlhfiokolroleeaejexjslihseaoelqnsrwizluirhuraarefssdsealtkuediqtdpwekselinealineozeremtjandnrerracqoakiltrcsnwataavalommuslrdqawqpcneaiotajsaiedrkoxtasfyvermeyrnaibrdeiixlefsesvsqrlobkatcptiuxpmvanohcedlemkgevsuoexjjmenoteatptylewesoeotzbveiugseaswoeueoirpupdpulsidsiosueeealdepeltuwssipsecinicloeantylscemtsbairodutathtceeutmrsiarnptamasrrildiuwntaisaatculursrgeierrheeiteacuroruyfretvcxegadiiunguenunubreuflnccretdeetwmdunttrosyntooieeeutvenra";
+	String grid10x10 = "eymmccsrltjttsdiraoarliuniepeousrcgoiseerreeistiedtomcteevcmkaualilaretneerectresieenspgizeoeceecuds";
 	private static LexicographicTree dictionary = null;
 
 	@BeforeAll
@@ -35,5 +37,82 @@ public class BoggleTest {
 		assertFalse(b.contains("sono"));
 		assertEquals(EXPECTED_WORDS, b.solve());
 	}
+	
+	@Test
+	void fiftyExample() {
+		Boggle b = new Boggle(50, grid50x50, dictionary);
+		assertTrue(b.contains("dedicacas"));
+	}
+	
+	
+	// My tests
+	// Constructors
+	@Test
+	void constructorNegativeSize() {		
+		assertThrows(IllegalArgumentException.class, () -> new Boggle(-10, dictionary));
+	}
+	
+	@Test
+	void constructorNulSize() {		
+		assertThrows(IllegalArgumentException.class, () -> new Boggle(0, dictionary));
+	}
+
+	@Test
+	void constructorLettersLength() {
+		// Given
+		Boggle grid = new Boggle(5, dictionary);
+		int counter = 0;
+		
+		// When
+		counter = grid.letters().length();
+		
+		// Then
+		assertEquals(25, counter);
+	}
+	
+	
+	
+	
+	@Test
+	void constructor2NegativeSize() {		
+		assertThrows(IllegalArgumentException.class, () -> new Boggle(-10, grid10x10, dictionary));
+	}
+	
+	@Test
+	void constructor2NulSize() {		
+		assertThrows(IllegalArgumentException.class, () -> new Boggle(0, grid10x10, dictionary));
+	}
+	
+	@Test
+	void constructor2NotEnoughLetters() {		
+		assertThrows(IllegalArgumentException.class, () -> new Boggle(20, grid10x10, dictionary));
+	}
+	
+	@Test
+	void constructor2TooMuchLetters() {		
+		// Given
+		Boggle grid = new Boggle(5, grid10x10, dictionary);
+		int counter = 0;
+		
+		// When
+		counter = grid.letters().length();
+		
+		// Then
+		assertEquals(25, counter);
+	}
+	
+	@Test
+	void constructor2LettersLength() {
+		// Given
+		Boggle grid = new Boggle(10, grid10x10, dictionary);
+		int counter = 0;
+		
+		// When
+		counter = grid.letters().length();
+		
+		// Then
+		assertEquals(100, counter);
+	}
+	
 
 }

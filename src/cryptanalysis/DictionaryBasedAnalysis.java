@@ -7,16 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import tree.LexicographicTree;
 
@@ -53,35 +49,44 @@ public class DictionaryBasedAnalysis {
 	 * @return The decoding alphabet at the end of the analysis process
 	 */
 	public String guessApproximatedAlphabet(String alphabet) {
-		// Vérifier que l'alphabet contient bien 26 lettres et ne présente pas de redondances
-		TreeSet<String> wordsExtracted = extractWords(cryptogram);
+		if(!isCorrectAlphabet(alphabet)) {
+			throw new IllegalArgumentException("Please provide correct text and correct alphabet");
+		}
+		List<String> wordsExtracted = extractWords(cryptogram);
 		
-		int startingNbrWords = wordsExtracted.size();
-		int currentNbrWords = startingNbrWords;
+		if(!wordsExtracted.isEmpty()) {
+			List<String> wordsCopy = new ArrayList<>(wordsExtracted);
+			String currentExtractedWord;
+			int startingNbrWords = wordsCopy.size();
+			int currentNbrWords = startingNbrWords;
+			
+			while(!wordsCopy.isEmpty()) {
 				
-		while(!wordsExtracted.isEmpty()) {
-			
-			String newAlphabet = "";
-			
-			String currentExtractedWord = wordsExtracted.first().toUpperCase();
-			String compatibleWord = getCompatibleWord(currentExtractedWord);
-						
-			if(!compatibleWord.isEmpty()) {
-				newAlphabet = updateAlphabet(alphabet,currentExtractedWord, compatibleWord);			
-				applyAlphabetOnWords(wordsExtracted,newAlphabet);
-			} else {
+				currentExtractedWord  = wordsCopy.get(0);
+				System.out.println("ExtractedWord) " + currentExtractedWord);
+
+				String newAlphabet = "";
+				
+				String compatibleWord = getCompatibleWord(currentExtractedWord);
+							
+				if(!compatibleWord.isEmpty()) {
+					newAlphabet = updateAlphabet(alphabet,applySubstitution(currentExtractedWord, alphabet), compatibleWord);
+					wordsCopy = new ArrayList<>(wordsExtracted);
+					removeValidWords(wordsCopy,newAlphabet);
+				}
+								
+				if(currentNbrWords > wordsCopy.size()) {
+					alphabet = newAlphabet;
+				} else {
+					wordsCopy.remove(currentExtractedWord);
+				}
+				
+				currentNbrWords = wordsCopy.size();
+				
 				wordsExtracted.remove(currentExtractedWord);
+																		
+				System.out.printf("=> Score decoded : words = %d / valid = %d / invalid = %d\n",startingNbrWords,startingNbrWords - currentNbrWords,currentNbrWords);
 			}
-			
-			removeValidWords(wordsExtracted);
-			
-			if(currentNbrWords - wordsExtracted.size() > 1) {
-				alphabet = newAlphabet;
-			}
-			
-			currentNbrWords = wordsExtracted.size();
-									
-			System.out.printf("=> Score decoded : words = %d / valid = %d / invalid = %d\n",startingNbrWords,startingNbrWords - currentNbrWords,currentNbrWords);
 		}
 		return alphabet;
 	}
@@ -93,7 +98,7 @@ public class DictionaryBasedAnalysis {
 	 * @return The substituted text
 	 */
 	public static String applySubstitution(String text, String alphabet) {
-		if(text == null || alphabet == null || alphabet.length() != 26) {
+		if(!isCorrectAlphabet(alphabet)) {
 			throw new IllegalArgumentException("Please provide correct text and correct alphabet");
 		}
 		
@@ -149,31 +154,37 @@ public class DictionaryBasedAnalysis {
 		return data;
 	}
 	
-	private TreeSet<String> extractWords(String text) {
+	private List<String> extractWords(String text) {	
+		String[] splittedText = text.split("\\s+");
+		List<String> words = new ArrayList<>();
 		
-		TreeSet<String> words = new TreeSet<>(
-			    Comparator.comparing(String::length, Comparator.reverseOrder())
-			        .thenComparing(Comparator.naturalOrder())
-			);
+		for(String word : splittedText) {
+			if(!words.contains(word) && word.length() > 2) {
+				words.add(word);
+			}
+		}
+	    
+	    Collections.sort(words, new Comparator<String>() {
+            @Override
+            public int compare(String word1, String word2) {
+                return Integer.compare(word2.length(), word1.length());
+            }
+        });
 
-		 List<String> wordsFound = Arrays.stream(text.split("\\s+"))
-		            .filter(word -> word.length() > 2)
-		            .collect(Collectors.toList());
-		         
-		 words.addAll(wordsFound);
-
-		 return words;
+	    return words;
 	}
 	
-	
-	private void removeValidWords(Set<String> words) {
-		words.removeIf(word -> dictionnary.containsWord(word));
+	private void removeValidWords(List<String> words,String alphabet) {
+		words.removeIf(word -> dictionnary.containsWord(applySubstitution(word, alphabet).toLowerCase()));
 	}
 	
 	private String getCompatibleWord(String cryptogram) {
 		var cryptoSeq = getWordSequence(cryptogram);
 		
-		for(var currentWord : dictionnary.getWordsOfLength(cryptogram.length())) {
+		List<String> wordsFound = dictionnary.getWordsOfLength(cryptogram.length());
+				
+		for(var currentWord : wordsFound) {
+			currentWord = currentWord.replaceAll("[^a-z]", "");
 			if(Arrays.equals(cryptoSeq,getWordSequence(currentWord))) {
 				return currentWord.toUpperCase();
 			}
@@ -200,6 +211,7 @@ public class DictionaryBasedAnalysis {
 	private String updateAlphabet(String alphabet,String cryptogram,String candidateWord) {
 		Map<Character,Character> substitutions = new HashMap<>();
 		StringBuilder newAlphabet = new StringBuilder(alphabet);
+		
 		for(int i = 0; i < alphabet.length(); i++) {
 			char currentLetter = alphabet.charAt(i);
 			int indexLetterInCrypto = cryptogram.indexOf(currentLetter);
@@ -224,17 +236,12 @@ public class DictionaryBasedAnalysis {
 				}
 				substitutions.put(currentKey,currentValue);
 			}
-		}
-		
-		for(var currentSub : substitutions.entrySet()) {
-			var currentKey = currentSub.getKey();
-			var currentValue = currentSub.getValue();
-			
 			if(currentKey != currentValue) {
 				newAlphabet.setCharAt(alphabet.indexOf(currentKey),currentValue);
 			}
 		}
 		
+		System.out.println(newAlphabet.toString());
 		
 		return newAlphabet.toString();
 	}
@@ -248,14 +255,24 @@ public class DictionaryBasedAnalysis {
 		return ' ';
 	}
 	
-	private void applyAlphabetOnWords(TreeSet<String> wordsExtracted,String alphabet) {
-		List<String> updatedWords = new ArrayList<String>();
-		for (String w : wordsExtracted) {
-		    String updatedWord = applySubstitution(w,alphabet);
-		    updatedWords.add(updatedWord);
+	private static boolean isCorrectAlphabet(String alphabet) {
+		if(alphabet.length() != 26) {
+			return false;
 		}
-		wordsExtracted.clear();
-		wordsExtracted.addAll(updatedWords);
+		
+		List<Character> letters = new ArrayList<Character>();
+		
+		for(int i = 0; i < alphabet.length(); i++) {
+			char currentLetter = alphabet.charAt(i);
+			
+			if(!letters.contains(currentLetter) && currentLetter >= 65 && currentLetter <= 90) {
+				letters.add(currentLetter);
+			} else {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	 
     /*
@@ -284,7 +301,9 @@ public class DictionaryBasedAnalysis {
 		DictionaryBasedAnalysis dba = new DictionaryBasedAnalysis(cryptogram, dict);
 		String startAlphabet = LETTERS;
 //		String startAlphabet = "ZISHNFOBMAVQLPEUGWXTDYRJKC"; // Random alphabet
+		long startTime = System.currentTimeMillis();
 		String finalAlphabet = dba.guessApproximatedAlphabet(startAlphabet);
+		System.out.println("Analysis duration : " + (System.currentTimeMillis() - startTime) / 1000.0);
 		
 		// Display final results
 		System.out.println();

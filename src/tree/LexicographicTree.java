@@ -29,7 +29,7 @@ public class LexicographicTree {
 	public LexicographicTree(String filename) {
 		this.root = new TreeVertex(' ');
 		treeSize = 0;
-		if(filename != null) {
+		if(filename != null && new File(filename).exists()) {
 			initializeTree(filename);
 		}
 	}
@@ -55,23 +55,31 @@ public class LexicographicTree {
 		TreeVertex vertexFound;
 		char currentCharacter;
 		
-		word = word.toLowerCase();
-		for(int i = 0; i < word.length();i++) {
-			currentCharacter = word.charAt(i);
-			if(isAcceptedCharacter(currentCharacter)) {
-				vertexFound = currentVertex.getChild(currentCharacter);
-				if(vertexFound == null) {
-					vertexFound = new TreeVertex(currentCharacter);
-					currentVertex.addChild(currentCharacter, vertexFound);
-					isNewWord = true;
-				}
-				currentVertex = vertexFound;
+		if(word.isEmpty()) {
+			if(currentVertex.getChild(' ') == null) {
+				vertexFound = new TreeVertex(' ');
+				currentVertex.addChild(' ', vertexFound);
+				currentVertex.setEndWord(true);
+				treeSize++;
 			}
-		}
-		currentVertex.setEndWord(true);
-		
-		if(isNewWord) {
-			treeSize++;
+		} else {
+			for(int i = 0; i < word.length();i++) {
+				currentCharacter = word.charAt(i);
+				if(isAcceptedCharacter(currentCharacter)) {
+					vertexFound = currentVertex.getChild(currentCharacter);
+					if(vertexFound == null) {
+						vertexFound = new TreeVertex(currentCharacter);
+						currentVertex.addChild(currentCharacter, vertexFound);
+						isNewWord = true;
+					}
+					currentVertex = vertexFound;
+				}
+			}
+			currentVertex.setEndWord(true);
+			
+			if(isNewWord) {
+				treeSize++;
+			}
 		}
 	}
 	/**
@@ -83,8 +91,6 @@ public class LexicographicTree {
 		if(word == null) {
 			return false;
 		}
-		
-		word = word.toLowerCase();
 		
 		TreeVertex currentVertex = root;
 		for(char currentCharacter : word.toCharArray()) {
@@ -105,9 +111,7 @@ public class LexicographicTree {
 		if(prefix.isEmpty()) {
 			return true;
 		}
-		
-		prefix = prefix.toLowerCase();
-		
+				
 		TreeVertex currentVertex = root;
 		for(char currentCharacter : prefix.toCharArray()) {
 			TreeVertex vertexFound = currentVertex.getChild(currentCharacter);
@@ -129,7 +133,6 @@ public class LexicographicTree {
 		List<String> words = new ArrayList<>();
 		TreeVertex currentVertex = root;
 		if(!prefix.isEmpty()) {
-			prefix = prefix.toLowerCase();
 			for(char currentChar : prefix.toCharArray()) {
 				currentVertex = currentVertex.getChild(currentChar);
 				if(currentVertex == null) {
