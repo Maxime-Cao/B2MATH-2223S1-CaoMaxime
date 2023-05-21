@@ -15,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import tree.LexicographicTree;
 
@@ -29,7 +28,7 @@ public class DictionaryBasedAnalysis {
 	
 	private final String cryptogram;
 	private final LexicographicTree dictionnary;
-	private Set<String> currentCompatibleWords;
+	private List<String> currentCompatibleWords;
 	private int currentCompatibleWordsSize;
 
 	/*
@@ -42,7 +41,7 @@ public class DictionaryBasedAnalysis {
 		
 		this.cryptogram = cryptogram;
 		this.dictionnary = dict;
-		this.currentCompatibleWords = new HashSet<>();
+		this.currentCompatibleWords = new ArrayList<>();
 		this.currentCompatibleWordsSize = 0;
 	}
 	
@@ -183,39 +182,35 @@ public class DictionaryBasedAnalysis {
 		int cryptogramLength = cryptogram.length();
 
 	    if (currentCompatibleWordsSize != cryptogramLength) {
-	        currentCompatibleWords = new HashSet<>(dictionnary.getWordsOfLength(cryptogramLength));
+	        currentCompatibleWords = dictionnary.getWordsOfLength(cryptogramLength);
 	        currentCompatibleWordsSize = cryptogramLength;
 	    }
 
 	    var cryptoSeq = getWordSequence(cryptogram);
 
-	    for (var word : currentCompatibleWords) {
-	        String currentWord = word.replaceAll("[^a-z]", "");
-	        var wordSeq = getWordSequence(currentWord);
-
-	        if (wordSeq.equals(cryptoSeq)) {
-	            return currentWord.toUpperCase();
-	        }
-	    }
-
-	    return "";
+		for(var currentWord : currentCompatibleWords) {
+			currentWord = currentWord.replaceAll("[^a-z]", "");
+			if(Arrays.equals(cryptoSeq,getWordSequence(currentWord))) {
+				return currentWord.toUpperCase();
+			}
+		}
+		
+		return "";
 	}
-
-	private Set<String> getWordSequence(String word) {
-	    Map<Character, String> seqMap = new LinkedHashMap<>();
-
-	    for (int i = 0; i < word.length(); i++) {
-	        char currentCharacter = word.charAt(i);
-	        
-	        if (seqMap.containsKey(currentCharacter)) {
-	            String currentValue = seqMap.get(currentCharacter);
-	            seqMap.put(currentCharacter, String.format("%s%d", currentValue, i));
-	        } else {
-	            seqMap.put(currentCharacter, String.format("%d", i));
-	        }
-	    }
-
-	    return new HashSet<>(seqMap.values());
+	
+	private Object[] getWordSequence(String word) {
+		  Map<Character,String> seqMap = new LinkedHashMap<Character,String>();
+		    
+		    for(int i = 0; i < word.length(); i++) {
+		        char currentCharacter = word.charAt(i);
+		        if(seqMap.containsKey(currentCharacter)) {
+		            String currentValue = seqMap.get(currentCharacter);
+		            seqMap.put(currentCharacter,String.format("%s%d",currentValue,i));
+		        } else {
+		        	seqMap.put(currentCharacter,String.format("%d",i));
+		        }
+		    }
+		    return seqMap.values().toArray();
 	}
 	
 	private String updateAlphabet(String alphabet,String cryptogram,String candidateWord) {
