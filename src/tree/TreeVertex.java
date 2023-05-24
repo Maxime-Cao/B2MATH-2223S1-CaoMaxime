@@ -5,7 +5,7 @@ import java.util.Arrays;
 class TreeVertex implements Comparable<TreeVertex> {
 	private final char vertexValue;
 	private static final int MAX_CHILDREN = 28;
-    private TreeVertex[] children = new TreeVertex[0];
+    private TreeVertex[] children = null;
     private boolean isEndWord = false;
     
     public TreeVertex(char vertexValue) {
@@ -17,10 +17,12 @@ class TreeVertex implements Comparable<TreeVertex> {
     }
 
     public TreeVertex getChild(char letter) {
-    	for(var child : children) {
-    		if(child.getVertexValue() == letter) {
-    			return child;
-    		}
+    	if(children != null) {
+	    	for(var child : children) {
+	    		if(child.getVertexValue() == letter) {
+	    			return child;
+	    		}
+	    	}
     	}
 		return null;
 	}
@@ -30,6 +32,11 @@ class TreeVertex implements Comparable<TreeVertex> {
 	}
 	
 	public void addChild(char letter,TreeVertex vertex) {
+		
+		if(children == null) {
+			children = new TreeVertex[0];
+		}
+		
 		if(children.length < MAX_CHILDREN) {
 			if(getChild(letter) == null) {
 				int nbrChildren = children.length;

@@ -140,7 +140,7 @@ public class LexicographicTree {
 				}
 			}
 		}
-		getAllWords(words,currentVertex,prefix);
+		getAllWords(words,currentVertex,new StringBuilder(prefix));
 		return words;
 	}
 
@@ -154,7 +154,7 @@ public class LexicographicTree {
 		List<String> words = new ArrayList<>();
 		
 		if(length > 0) {
-			getAllWordsOfLength(words,root,"",length);
+			getAllWordsOfLength(words,root,new StringBuilder(""),length);
 		}
 		
 		return words;
@@ -180,22 +180,36 @@ public class LexicographicTree {
 		return characterToVerify == 39 || characterToVerify == 45 || (characterToVerify >= 97 && characterToVerify <=122);
 	}
 	
-	private void getAllWords(List<String> words,TreeVertex vertex,String prefix) {
-		if(vertex.isEndWord()) {
-			words.add(prefix);
-		}
-		for(var child : vertex.getChildren()) {
-			getAllWords(words, child, prefix+child.getVertexValue());
-		}
+	private void getAllWords(List<String> words, TreeVertex vertex, StringBuilder prefix) {
+	    if (vertex.isEndWord()) {
+	        words.add(prefix.toString());
+	    }
+	    
+	    var currentVertexChildren = vertex.getChildren();
+	    
+	    if(currentVertexChildren != null) {
+		    for (var child : currentVertexChildren) {
+		        prefix.append(child.getVertexValue());
+		        getAllWords(words, child, prefix);
+		        prefix.deleteCharAt(prefix.length() - 1);
+		    }
+	    }
 	}
 	
-	private void getAllWordsOfLength(List<String> words,TreeVertex vertex,String prefix,int length) {
-		if(vertex.isEndWord() && prefix.length() == length) {
-			words.add(prefix);
-		} else {
-			for(var child : vertex.getChildren()) {
-				getAllWordsOfLength(words, child, prefix+child.getVertexValue(),length);			}
-		}
+	private void getAllWordsOfLength(List<String> words, TreeVertex vertex, StringBuilder prefix, int length) {
+	    if (vertex.isEndWord() && prefix.length() == length) {
+	        words.add(prefix.toString());
+	    } else {
+	    	 var currentVertexChildren = vertex.getChildren();
+	    	
+	    	if(currentVertexChildren != null) {
+		        for (var child : currentVertexChildren) {
+		            prefix.append(child.getVertexValue());
+		            getAllWordsOfLength(words, child, prefix, length);
+		            prefix.deleteCharAt(prefix.length() - 1);
+		        }
+	    	}
+	    }
 	}
 	
 	/*

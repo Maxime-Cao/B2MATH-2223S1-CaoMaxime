@@ -10,9 +10,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import tree.LexicographicTree;
 
@@ -61,24 +63,39 @@ public class DictionaryBasedAnalysis {
 		if(!wordsExtracted.isEmpty()) {
 			List<String> currentWords = new ArrayList<>(wordsExtracted);
 			String currentExtractedWord;
+			Set<String> alreadyConsultedWords = new HashSet<>();
+			Set<String> alphabetConsulted = new HashSet<>();
+			
+			if(!alphabet.equals(LETTERS)) {
+				removeValidWords(currentWords, alphabet);
+			}
 			
 			while(!currentWords.isEmpty()) {
 				
 				currentExtractedWord  = currentWords.get(0);
-								
-				String newAlphabet = "";
 				
-				String compatibleWord = getCompatibleWord(currentExtractedWord);
-										
-				if(!compatibleWord.isEmpty()) {
-					newAlphabet = updateAlphabet(alphabet,applySubstitution(currentExtractedWord, alphabet), compatibleWord);
-					var newWords = new ArrayList<>(wordsExtracted);
-					removeValidWords(newWords,newAlphabet);
+				if(!alreadyConsultedWords.contains(currentExtractedWord)) {
 					
-					if(newWords.size() < currentWords.size()) {
-						alphabet = newAlphabet;
-						currentWords = newWords;
+								
+					String newAlphabet = "";
+					
+					String compatibleWord = getCompatibleWord(currentExtractedWord);
+					
+					if(!compatibleWord.isEmpty()) {
+						newAlphabet = updateAlphabet(alphabet,applySubstitution(currentExtractedWord, alphabet), compatibleWord);
+						if(!alphabetConsulted.contains(newAlphabet)) {
+							alphabetConsulted.add(newAlphabet);
+							var newWords = new ArrayList<>(wordsExtracted);
+							removeValidWords(newWords,newAlphabet);
+							if(newWords.size() < currentWords.size()) {
+								alphabet = newAlphabet;
+								currentWords = newWords;
+							}
+						}
 					}
+					
+					alreadyConsultedWords.add(currentExtractedWord);
+				
 				}
 				
 				currentWords.remove(currentExtractedWord);
