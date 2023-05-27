@@ -10,6 +10,11 @@ import org.jgrapht.Graphs;
 
 import tree.LexicographicTree;
 
+/**
+ * @author Maxime Cao
+ * This class can be used to create a Boggle grid materialized by a graph, find all the words in the grid according to the rules of the game and check whether the grid contains a word
+ *
+ */
 public class Boggle {
 	private final LexicographicTree dictionnary;
     private final SimpleGraph<Vertex, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
@@ -24,6 +29,7 @@ public class Boggle {
 	 * @param dict A dictionary of allowed words
 	 */
 	public Boggle(int size, LexicographicTree dict) {
+		verifyDictionnary(dict);
 		verifyGridSize(size);
 		String letters = pickRandomLetters(size*size);
 		dictionnary = dict;
@@ -37,18 +43,9 @@ public class Boggle {
 	 * @param dict A dictionary of allowed words
 	 */
 	public Boggle(int size, String letters, LexicographicTree dict) {
+		verifyDictionnary(dict);
 		verifyGridSize(size);
-		
-		int lettersLength = letters.length();
-		int sizeGrid = size*size;
-		
-		if(sizeGrid > lettersLength) {
-			throw new IllegalArgumentException("Le nombre de lettres fournies n'est pas correct");
-		}
-		
-		if(sizeGrid < lettersLength) {
-			letters = letters.substring(0,sizeGrid);
-		}
+		verifyLetters(letters,size);		
 		dictionnary = dict;
 		buildGraph(size, letters);
 	}
@@ -76,9 +73,11 @@ public class Boggle {
 	 * @return true if the word is present, false otherwise
 	 */
 	public boolean contains(String word) {
-		if(word == null ||word.length() < 3) {
+		if(word.length() < 3) {
 			return false;
 		}
+		
+		word = word.toLowerCase();
 		
 		for(var vertex : graph.vertexSet()) {
 			if(containsSequence(vertex,word,new HashSet<Vertex>())) {
@@ -114,7 +113,7 @@ public class Boggle {
 		
 		for(int i = 1; i <= nbrVertices; i++) {
 			textualGrid.append(vertices.charAt(i-1));
-			if(i < nbrVertices && i % numberVerticesByRow == 0) {
+			if(i % numberVerticesByRow == 0) {
 				textualGrid.append("\n");
 			} else {
 				textualGrid.append(" ");
@@ -128,6 +127,10 @@ public class Boggle {
 	 * PRIVATE METHODS
 	 */
 
+	/**
+	 * Checks if the grid size is valid
+	 * @param gridSize Grid size
+	 */
 	private void verifyGridSize(int gridSize) {
 		if(gridSize < 1) {
 			throw new IllegalArgumentException("La taille de la grille ne doit pas être inférieure à 1");
@@ -135,6 +138,11 @@ public class Boggle {
 		
 	}
 	
+	/**
+	 * Builds a Boggle grid in the form of a graph based on a size and a series of letters
+	 * @param size Grid size (example : if this parameter is set to 4, the grid size will be 16 (4X4))
+	 * @param letters A series of letters
+	 */
 	private void buildGraph(int size,String letters) {
 		Vertex[][] verticesAdded = new Vertex[size][size];
 		for(int i = 0; i < verticesAdded.length; i++) {
@@ -147,12 +155,27 @@ public class Boggle {
 		}
 	}
 	
+	/**
+	 * Adds edges to the graph representing the Boggle grid
+	 * @param vertices Graph vertices
+	 * @param lineNumber Current line in vertices
+	 * @param columnNumber Current column in vertices
+	 */
 	private void addEdges(Vertex[][] vertices,int lineNumber,int columnNumber) {
 		Vertex currentVertex = vertices[lineNumber][columnNumber];
+		
+		// If the column number is greater than 0, a new edge is added between the current and previous vertex
 		if(columnNumber > 0) {
 			graph.addEdge(currentVertex,vertices[lineNumber][columnNumber-1]);
 		}
 		
+		/*
+		 * If the line number is greater than 0 :
+
+			- When the column number is smaller than the number of vertices in the row - 1, a new edge is added between the current vertex and the vertex above it on the right.
+
+			- When the column number is greater than 0, a new edge is added between the current vertex and the vertex above it on the left.
+		 * */
 		if(lineNumber > 0) {
 			graph.addEdge(currentVertex,vertices[lineNumber - 1][columnNumber]);
 			if(columnNumber != vertices[lineNumber].length - 1) {
@@ -164,6 +187,11 @@ public class Boggle {
 		}
 	}
 	
+	/**
+	 * Randomly select a number of letters based on their frequency of appearance in the French language
+	 * @param nbrLettersToPick Number of letters to pick
+	 * @return A series of random letters
+	 */
 	private String pickRandomLetters(int nbrLettersToPick) {
 		char[] lettersWithFrequencies = new char[] {'a','a','a','a','a','a','a','a','b','b','c','c','c','c','d','d','d','d','e','e','e','e','e','e','e','e','e','e','e','e','e','f','f','g','g','h','h','i','i','i','i','i','i','i','j','k','l','l','l','l','l','m','m','m','n','n','n','n','n','n','n','o','o','o','o','o','o','p','p','p','q','r','r','r','r','r','r','r','s','s','s','s','s','s','s','t','t','t','t','t','t','u','u','u','u','u','v','v','w','x','y','z'};
 		StringBuilder lettersPicked = new StringBuilder("");
@@ -174,6 +202,13 @@ public class Boggle {
 		return lettersPicked.toString();
 	}
 	
+	/**
+	 * Determines whether a word or sequence of letters can be found from a vertex
+	 * @param vertex Vertex at which search begins
+	 * @param word The sequence of letters to search for
+	 * @param visitedVertices Vertices already visited
+	 * @return True if it is possible to find the letter sequence from the current vertex, false otherwise
+	 */
 	private boolean containsSequence(Vertex vertex,String word,Set<Vertex> visitedVertices) {
 		visitedVertices.add(vertex);
 		if(vertex.getVertexValue() == word.charAt(0)) {
@@ -191,6 +226,13 @@ public class Boggle {
 		return false;
 	}
 	
+	/**
+	 * Finds all words in the Boggle grid from the current vertex
+	 * @param currentVertex Current vertex
+	 * @param currentWord Current word
+	 * @param wordsFound Words found
+	 * @param visitedVertices Vertices already visited
+	 */
 	private void solveBoggleGrid(Vertex currentVertex,StringBuilder currentWord,Set<String> wordsFound,Set<Vertex> visitedVertices) {
 		currentWord.append(currentVertex.getVertexValue());
 		visitedVertices.add(currentVertex);
@@ -211,6 +253,46 @@ public class Boggle {
 		
 		visitedVertices.remove(currentVertex);
 		currentWord.setLength(currentWord.length()-1);
+	}
+	
+	/**
+	 * Checks if the dictionary is correct
+	 * @param dictionnary The dictionary to check
+	 */
+	private void verifyDictionnary(LexicographicTree dictionnary) {
+		if(dictionnary == null) {
+			throw new NullPointerException("Please provide non null dictionnary");
+		}
+		
+		if(dictionnary.size() == 0) {
+			throw new IllegalArgumentException("Please provide a correct dictionnary");
+		}
+		
+	}
+	
+	/**
+	 * Check that the letters used to construct the Boggle grid are valid
+	 * @param letters Letters to check
+	 * @param size Grid size
+	 */
+	private void verifyLetters(String letters,int size) {
+		int lettersLength = letters.length();
+		int sizeGrid = size*size;
+		
+		if(sizeGrid > lettersLength) {
+			throw new IllegalArgumentException("Le nombre de lettres fournies n'est pas correct");
+		}
+		
+		if(sizeGrid < lettersLength) {
+			letters = letters.substring(0,sizeGrid);
+		}
+		
+		for(int i = 0; i < letters.length(); i++) {
+			char currentLetter = letters.charAt(i);
+			if(!(currentLetter >= 97 && currentLetter <= 122)) {
+				throw new IllegalArgumentException("Please provide correct letters");
+			}
+		}
 	}
 	
 	/*

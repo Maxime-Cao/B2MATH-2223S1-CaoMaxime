@@ -18,6 +18,11 @@ import java.util.Set;
 
 import tree.LexicographicTree;
 
+/**
+ * This class allows you to decrypt a text by finding the substitution alphabet used to encrypt it. It can also be used to apply a substitution alphabet to a text
+ * @author Maxime Cao
+ *
+ */
 public class DictionaryBasedAnalysis {
 	
 	private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -31,10 +36,14 @@ public class DictionaryBasedAnalysis {
 	private List<String> currentCompatibleWords;
 	private int currentCompatibleWordsSize;
 
-	/*
-	 * CONSTRUCTOR
+
+	/**
+	 * This constructor initializes an object of the DictionaryBasedAnalysis class based on a starting cryptogram (the ciphertext) and a dictionary required for decryption
+	 * @param cryptogram The starting cryptogram (ciphertext)
+	 * @param dict The dictionary
 	 */
 	public DictionaryBasedAnalysis(String cryptogram, LexicographicTree dict) {
+		
 		if(dict ==  null || cryptogram == null || cryptogram.isEmpty()) {
 			throw new IllegalArgumentException("Please provide correct cryptogram and dictionnary");
 		}
@@ -55,17 +64,21 @@ public class DictionaryBasedAnalysis {
 	 * @return The decoding alphabet at the end of the analysis process
 	 */
 	public String guessApproximatedAlphabet(String alphabet) {
+		alphabet = alphabet.toUpperCase();
 		if(!isCorrectAlphabet(alphabet)) {
 			throw new IllegalArgumentException("Please provide correct text and correct alphabet");
 		}
+		// Extract words of more than two letters from the text
 		List<String> wordsExtracted = extractWords(cryptogram);
 		
 		if(!wordsExtracted.isEmpty()) {
 			List<String> currentWords = new ArrayList<>(wordsExtracted);
 			String currentExtractedWord;
+			
 			Set<String> alreadyConsultedWords = new HashSet<>();
 			Set<String> alphabetConsulted = new HashSet<>();
 			
+			//If the alphabet is different from the letters A to Z in order, we apply a first substitution to the word list
 			if(!alphabet.equals(LETTERS)) {
 				removeValidWords(currentWords, alphabet);
 			}
@@ -85,6 +98,7 @@ public class DictionaryBasedAnalysis {
 						newAlphabet = updateAlphabet(alphabet,applySubstitution(currentExtractedWord, alphabet), compatibleWord);
 						if(!alphabetConsulted.contains(newAlphabet)) {
 							alphabetConsulted.add(newAlphabet);
+							//I initialize a new list that includes all the words from the beginning and, by applying a substitution with the new alphabet to each of the words, I see if I obtain a list that contains less invalid words than the currentWords list. If so, currentWords becomes newWords
 							var newWords = new ArrayList<>(wordsExtracted);
 							removeValidWords(newWords,newAlphabet);
 							if(newWords.size() < currentWords.size()) {
@@ -165,7 +179,12 @@ public class DictionaryBasedAnalysis {
 		}
 		return data;
 	}
-	
+
+	/**
+	 * Extracts all words (uninterrupted sequences of letters) from a text
+	 * @param text The text from which the words are extracted
+	 * @return A list of Strings containing the words extracted from the text
+	 */
 	private List<String> extractWords(String text) {	
 		String[] splittedText = text.split("\\s+");
 		List<String> words = new ArrayList<>();
@@ -186,10 +205,20 @@ public class DictionaryBasedAnalysis {
 	    return words;
 	}
 	
+	/**
+	 * Delete from a list of words all the words that are valid (present in the dictionary) after applying a substitution alphabet
+	 * @param words The list of words
+	 * @param alphabet The substitution alphabet
+	 */
 	private void removeValidWords(List<String> words,String alphabet) {
 		words.removeIf(word -> dictionnary.containsWord(applySubstitution(word, alphabet).toLowerCase()));
 	}
 	
+	/**
+	 * Finds a word in the dictionary that is compatible with our cipher word
+	 * @param cryptogram The cipher word
+	 * @return A compatible word if any, otherwise an empty string
+	 */
 	private String getCompatibleWord(String cryptogram) {
 		
 		int cryptogramLength = cryptogram.length();
@@ -211,6 +240,11 @@ public class DictionaryBasedAnalysis {
 		return "";
 	}
 	
+	/**
+	 * Provides the sequence of letters in a word (letter frequency and order of appearance)
+	 * @param word The word from which to extract the sequence of letters
+	 * @return An array containing the sequence of letters in the word
+	 */
 	private Object[] getWordSequence(String word) {
 		  Map<Character,String> seqMap = new LinkedHashMap<Character,String>();
 		    
@@ -226,6 +260,13 @@ public class DictionaryBasedAnalysis {
 		    return seqMap.values().toArray();
 	}
 	
+	/**
+	 * Update an alphabet based on a cipher word and a candidate word
+	 * @param alphabet Starting alphabet
+	 * @param cryptogram Cipher word
+	 * @param candidateWord Candidate word
+	 * @return The updated alphabet
+	 */
 	private String updateAlphabet(String alphabet,String cryptogram,String candidateWord) {
 		Map<Character,Character> substitutions = new HashMap<>();
 		StringBuilder newAlphabet = new StringBuilder(alphabet);
@@ -243,12 +284,13 @@ public class DictionaryBasedAnalysis {
 		for(var currentSubstitution : substitutions.entrySet()) {
 			char currentKey = currentSubstitution.getKey();
 			char currentValue = currentSubstitution.getValue();
+			// For example, if key = E and value = E
 			if(currentKey == currentValue) {
 				char newValue = currentValue;
-				while(newValue != ' ') {
+				while(newValue != '\0') {
 					newValue = getKeyWithLetterValue(newValue, substitutions);
 					
-					if(newValue != ' ') {
+					if(newValue != '\0') {
 						currentValue = newValue;
 					}
 				}
@@ -262,15 +304,26 @@ public class DictionaryBasedAnalysis {
 		return newAlphabet.toString();
 	}
 	
+	/**
+	 * Find a substitution in a character map where the value is equal to a given letter
+	 * @param letter The letter to search for
+	 * @param substitutions The substitution map
+	 * @return The letter that points to the letter you're looking for, or \0 if no match was found
+	 */
 	private char getKeyWithLetterValue(char letter,Map<Character,Character> substitutions) {
 		for(var currentSubstitution : substitutions.entrySet()) {
 			if(currentSubstitution.getKey() != letter && currentSubstitution.getValue() == letter) {
 				return currentSubstitution.getKey();
 			}
 		}
-		return ' ';
+		return '\0';
 	}
 	
+	/**
+	 * Determines whether an alphabet is correct
+	 * @param alphabet The alphabet to check
+	 * @return True if the alphabet is valid, false otherwise
+	 */
 	private static boolean isCorrectAlphabet(String alphabet) {
 		if(alphabet.length() != 26) {
 			return false;
